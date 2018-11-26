@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // TODO extension化
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>, grantResults: IntArray
