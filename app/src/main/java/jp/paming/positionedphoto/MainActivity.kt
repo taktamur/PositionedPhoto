@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import jp.paming.positionedphoto.databinding.PhotoCardBinding
 import kotlinx.android.synthetic.main.activity_main.*
+import android.content.Intent
 
 
 class MainActivity : AppCompatActivity() {
@@ -63,7 +64,19 @@ class MainActivity : AppCompatActivity() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoCardDataViewHolder {
             val binding:PhotoCardBinding = DataBindingUtil.inflate(layoutInflater,
                 R.layout.photo_card, parent, false)
-            return PhotoCardDataViewHolder(binding)
+            // クリックリスナを搭載
+            val viewHolder = PhotoCardDataViewHolder(binding)
+
+            binding.root.setOnClickListener{
+                val position = viewHolder.getAdapterPosition() // positionを取得
+                // 何かの処理をします
+                Log.d("setOnClickListener","${position}")
+                val uri = list[position].uri
+                // ここ不自然
+                val intent = Intent(context, DetailActivity::class.java)
+                context.startActivity(intent)
+            }
+            return viewHolder
         }
 
         override fun onBindViewHolder(holder: PhotoCardDataViewHolder, position: Int) {
