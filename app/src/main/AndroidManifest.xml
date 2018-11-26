@@ -11,6 +11,13 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
+        <uses-library
+                android:name="org.apache.http.legacy"
+                android:required="false" />
+<!-- ここで使っているAPIキーは別リソースファイル管理にして、gitには入れない -->
+        <meta-data
+                android:name="com.google.android.geo.API_KEY"
+                android:value="@string/google_maps_key"/>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
