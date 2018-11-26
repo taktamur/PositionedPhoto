@@ -3,6 +3,7 @@ package jp.paming.positionedphoto
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 
+// TODO 地図と写真を表示
 class DetailActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -13,6 +13,8 @@ import android.widget.Toast
 import java.text.SimpleDateFormat
 import java.util.*
 
+val REQUEST_PERMISSION_CODE = 1234
+
 fun AppCompatActivity.onCreatePhotoPermission(grant:()->Unit){
     // Here, thisActivity is the current activity
     if (ContextCompat.checkSelfPermission(this,
@@ -34,7 +36,7 @@ fun AppCompatActivity.onCreatePhotoPermission(grant:()->Unit){
             val permission = Manifest.permission.READ_EXTERNAL_STORAGE
             ActivityCompat.requestPermissions(this,
                 arrayOf(permission),
-                12345)
+                REQUEST_PERMISSION_CODE)
 
             // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
             // app-defined int constant. The callback method gets the

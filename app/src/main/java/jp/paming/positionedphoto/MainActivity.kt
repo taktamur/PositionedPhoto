@@ -14,6 +14,8 @@ import com.bumptech.glide.Glide
 import jp.paming.positionedphoto.databinding.PhotoCardBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.widget.Toast
 
 
 class MainActivity : AppCompatActivity() {
@@ -28,6 +30,31 @@ class MainActivity : AppCompatActivity() {
         locswitch.setOnCheckedChangeListener { buttonView, isChecked ->
             readAndShowPhoto(isChecked)
         }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
+        when (requestCode) {
+            REQUEST_PERMISSION_CODE -> {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    readAndShowPhoto(locswitch.isChecked)
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Toast.makeText(this, "パーミッションが許可されませんでした。", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+        }// other 'case' lines to check for other
+        // permissions this app might request
     }
 
     private fun readAndShowPhoto(onlyLoc:Boolean){
@@ -70,6 +97,7 @@ class MainActivity : AppCompatActivity() {
             binding.root.setOnClickListener{
                 val position = viewHolder.getAdapterPosition() // positionを取得
                 // 何かの処理をします
+                // TODO Intentでuriを渡す
                 Log.d("setOnClickListener","${position}")
                 val uri = list[position].uri
                 // ここ不自然
