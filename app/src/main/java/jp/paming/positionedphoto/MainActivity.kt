@@ -105,6 +105,10 @@ class MainActivity : AppCompatActivity() {
                 val intent = Intent(context, DetailActivity::class.java)
                 val uriString =uri.toString()
                 intent.putExtra(DetailActivity.INTENT_EXTRA_URI, uriString)
+                list[position].loc?.let{
+                    intent.putExtra(DetailActivity.INTENT_EXTRA_LAT, it.lat)
+                    intent.putExtra(DetailActivity.INTENT_EXTRA_LON, it.lon)
+                }
                 context.startActivity(intent)
             }
             return viewHolder
