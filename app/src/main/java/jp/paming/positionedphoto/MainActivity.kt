@@ -103,6 +103,8 @@ class MainActivity : AppCompatActivity() {
                 val uri = list[position].uri
                 // ここ不自然
                 val intent = Intent(context, DetailActivity::class.java)
+                val uriString =uri.toString()
+                intent.putExtra(DetailActivity.INTENT_EXTRA_URI, uriString)
                 context.startActivity(intent)
             }
             return viewHolder
