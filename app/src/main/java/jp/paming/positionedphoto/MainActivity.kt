@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
             binding.root.setOnClickListener{
                 val position = viewHolder.getAdapterPosition() // positionを取得
                 // 何かの処理をします
-                // TODO Intentでuriを渡す
+                // TODO Intentの内容をjson化して渡す
                 Log.d("setOnClickListener","${position}")
                 val uri = list[position].uri
                 // ここ不自然
@@ -106,8 +106,8 @@ class MainActivity : AppCompatActivity() {
                 val uriString =uri.toString()
                 intent.putExtra(DetailActivity.INTENT_EXTRA_URI, uriString)
                 list[position].loc?.let{
-                    intent.putExtra(DetailActivity.INTENT_EXTRA_LAT, it.lat)
-                    intent.putExtra(DetailActivity.INTENT_EXTRA_LON, it.lon)
+                    intent.putExtra(DetailActivity.INTENT_EXTRA_LAT, it.latitude)
+                    intent.putExtra(DetailActivity.INTENT_EXTRA_LON, it.longitude)
                 }
                 context.startActivity(intent)
             }

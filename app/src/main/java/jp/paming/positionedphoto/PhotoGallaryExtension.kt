@@ -10,6 +10,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
+import com.google.android.gms.maps.model.LatLng
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -80,7 +81,7 @@ fun AppCompatActivity.read(): List<PhotoData> {
             val lat = cursor.getDouble(cursor.getColumnIndex(MediaStore.Images.Media.LATITUDE))
             val lon = cursor.getDouble(cursor.getColumnIndex(MediaStore.Images.Media.LONGITUDE))
             val loc = when{
-                lat!=0.0 && lon!=0.0 -> Location(lat,lon)
+                lat!=0.0 && lon!=0.0 -> LatLng(lat,lon)
                 else -> null
             }
             ret.add(PhotoData(bmpUri,date,loc))
@@ -90,9 +91,8 @@ fun AppCompatActivity.read(): List<PhotoData> {
     return ret
 }
 
-data class Location(val lat:Double, val lon:Double)
 
-class PhotoData(val uri: Uri, val date: Date, val loc:Location?){
+class PhotoData(val uri: Uri, val date: Date, val loc: LatLng?){
     private val df = SimpleDateFormat("yyyy/MM/dd HH:mm")
 
     var dateString:String = ""

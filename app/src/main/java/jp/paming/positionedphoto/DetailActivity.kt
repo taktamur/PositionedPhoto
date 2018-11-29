@@ -21,7 +21,7 @@ class DetailActivity : AppCompatActivity(), OnMapReadyCallback {
         const val INTENT_EXTRA_LON = "IntentExtraLon"
     }
 
-    private var loc:Location? = null
+    private var loc:LatLng? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,7 +31,7 @@ class DetailActivity : AppCompatActivity(), OnMapReadyCallback {
                 intent.hasExtra(DetailActivity.INTENT_EXTRA_LON)){
             val lat = intent.getDoubleExtra(DetailActivity.INTENT_EXTRA_LAT,0.0)
             val lon = intent.getDoubleExtra(DetailActivity.INTENT_EXTRA_LON,0.0)
-            loc = Location(lat,lon)
+            loc = LatLng(lat,lon)
         }
         val uri = Uri.parse(message)
         Glide.with(this).load(uri).into(imageView)
@@ -51,12 +51,11 @@ class DetailActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(map: GoogleMap?) {
         if( map == null) return
         loc?.let{
-            val newLocation = LatLng(it.lat, it.lon)
             map.addMarker(
                 MarkerOptions()
-                    .position(newLocation)
+                    .position(it)
             )
-            map.moveCamera(CameraUpdateFactory.newLatLng(newLocation))
+            map.moveCamera(CameraUpdateFactory.newLatLng(it))
             map.moveCamera(CameraUpdateFactory.zoomTo(12.0f))
         }
     }
