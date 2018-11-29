@@ -4,6 +4,7 @@ import android.net.Uri
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.bumptech.glide.Glide
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import kotlinx.android.synthetic.main.activity_detail.*
@@ -12,7 +13,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
 
-// TODO 地図の位置調整
 class DetailActivity : AppCompatActivity(), OnMapReadyCallback {
     // TODO パラメータ毎にINTENTを作るのめんどくさい
     companion object {
@@ -36,19 +36,28 @@ class DetailActivity : AppCompatActivity(), OnMapReadyCallback {
         val uri = Uri.parse(message)
         Glide.with(this).load(uri).into(imageView)
 
-        // 背景地図の表示
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.mapFragment) as SupportMapFragment
-        mapFragment.getMapAsync(this)
-        // TODO 緯度経度が無い場合の地図表示をどうするか？
+        if( loc != null ) {
+            // 背景地図の表示
+            mapFragment.getMapAsync(this)
+        }else{
+            val fragmentTransaction = supportFragmentManager.beginTransaction()
+            fragmentTransaction.hide(mapFragment)
+            fragmentTransaction.commit()
+        }
     }
 
     override fun onMapReady(map: GoogleMap?) {
-        // TODO 地図の初期表示位置がおかしい
-        map?.addMarker(
-            MarkerOptions()
-                .position(LatLng((loc?.lat ?: 0.0), (loc?.lon ?: 0.0)))
-                .title("Marker")
-        )
+        if( map == null) return
+        loc?.let{
+            val newLocation = LatLng(it.lat, it.lon)
+            map.addMarker(
+                MarkerOptions()
+                    .position(newLocation)
+            )
+            map.moveCamera(CameraUpdateFactory.newLatLng(newLocation))
+            map.moveCamera(CameraUpdateFactory.zoomTo(12.0f))
+        }
     }
 }
