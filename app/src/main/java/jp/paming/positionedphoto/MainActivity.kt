@@ -94,21 +94,13 @@ class MainActivity : AppCompatActivity() {
                 R.layout.photo_card, parent, false)
             // クリックリスナを搭載
             val viewHolder = PhotoCardDataViewHolder(binding)
-
+            // TODO lisnerを外出し
             binding.root.setOnClickListener{
                 val position = viewHolder.getAdapterPosition() // positionを取得
                 // 何かの処理をします
-                // TODO Intentの内容をjson化して渡す
-                Log.d("setOnClickListener","${position}")
-                val uri = list[position].uri
-                // ここ不自然
+                Log.d("setOnClickListener","$position")
                 val intent = Intent(context, DetailActivity::class.java)
-                val uriString =uri.toString()
-                intent.putExtra(DetailActivity.INTENT_EXTRA_URI, uriString)
-                list[position].loc?.let{
-                    intent.putExtra(DetailActivity.INTENT_EXTRA_LAT, it.latitude)
-                    intent.putExtra(DetailActivity.INTENT_EXTRA_LON, it.longitude)
-                }
+                intent.putExtra(DetailActivity.INTENT_EXTRA_PHOTODATA, list[position])
                 context.startActivity(intent)
             }
             return viewHolder
@@ -119,7 +111,6 @@ class MainActivity : AppCompatActivity() {
             // →DataBindingにより、自動でViewに反映される
             holder.binding.date = list[position].dateString
             holder.binding.visibleLocationIcon = list[position].loc != null
-            //Picasso.get().load(list[position].uri).fit().centerInside().into(holder.binding.imageView)
             Glide.with(context).load(list[position].uri).into(holder.binding.imageView)
         }
     }

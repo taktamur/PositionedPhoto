@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ContentUris
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Parcelable
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -11,6 +12,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.android.parcel.Parcelize
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -91,11 +93,15 @@ fun AppCompatActivity.read(): List<PhotoData> {
     return ret
 }
 
-
-class PhotoData(val uri: Uri, val date: Date, val loc: LatLng?){
-    private val df = SimpleDateFormat("yyyy/MM/dd HH:mm")
+@Parcelize
+data class PhotoData constructor(
+    val uri: Uri,
+    val date: Date,
+    val loc: LatLng?): Parcelable {
 
     var dateString:String = ""
-        get() = df.format(date)
-
+        get() {
+            val df = SimpleDateFormat("yyyy/MM/dd HH:mm")
+            return df.format(date)
+        }
 }
