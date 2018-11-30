@@ -17,6 +17,7 @@ import android.databinding.BindingAdapter
 import android.databinding.ObservableArrayList
 import android.net.Uri
 import android.support.v7.util.DiffUtil
+import android.widget.ImageView
 import android.widget.Toast
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
 
@@ -137,11 +138,9 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
         // ここではモデルに値をセットしている
         // →DataBindingにより、自動でViewに反映される
         holder.binding.viewModel = items[position]
-        Glide.with(context).load(items[position].getUri()).into(holder.binding.imageView)
     }
 
 }
-
 
 
 class MainViewModel {
@@ -187,23 +186,18 @@ class Callback(private val old: List<ItemViewModel>,
         old[oldItemPosition].getUri() == new[newItemPosition].getUri()
 }
 
-object RecyclerViewBindingAdapter {
-    @BindingAdapter("app:viewModels")
-    @JvmStatic
-    fun setViewModels(recyclerView: RecyclerView, items: ObservableArrayList<ItemViewModel>) {
-        val adapter = recyclerView.adapter as ItemAdapter
-        val diff = DiffUtil.calculateDiff(Callback(adapter.items, items), true)
-        // ここでListに変換してあげないとdispatchUpdatesToをかけれない
-        adapter.items = items.toList()
-        diff.dispatchUpdatesTo(adapter)
-    }
-}
 
 @BindingAdapter("app:viewModels")
-fun RecyclerView.setViewModels(recyclerView: RecyclerView, items: ObservableArrayList<ItemViewModel>) {
-    val adapter = recyclerView.adapter as ItemAdapter
+fun RecyclerView.setViewModels(items: ObservableArrayList<ItemViewModel>) {
+    val adapter = this.adapter as ItemAdapter
     val diff = DiffUtil.calculateDiff(Callback(adapter.items, items), true)
     // ここでListに変換してあげないとdispatchUpdatesToをかけれない
     adapter.items = items.toList()
     diff.dispatchUpdatesTo(adapter)
+}
+
+
+@BindingAdapter("imageUri")
+fun ImageView.loadImage(uri:Uri) {
+    Glide.with(this.context).load(uri).into(this)
 }
