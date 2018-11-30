@@ -13,20 +13,24 @@ import jp.paming.positionedphoto.databinding.PhotoCardBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.widget.Toast
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity() {
-
+    lateinit var binding:ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        binding = DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
+        binding.viewModel = {
+            MainViewModel().also {
+                it.callback = ::readAndShowPhoto
+            }
+        }()
         onCreatePhotoPermission {
-            readAndShowPhoto()
-        }
-        locswitch.setOnCheckedChangeListener { buttonView, isChecked ->
             readAndShowPhoto()
         }
     }
@@ -66,11 +70,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
         Log.d("photoDataList_loc","$photoDataList")
-        val binding = DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
 
         binding.adapter = ItemAdapter(this).also {
             it.onClick = ::onClick
-            it.list = photoDataList
+            it.setPhotoDataList( photoDataList )
         }
     }
 
@@ -92,13 +95,19 @@ class PhotoCardDataViewHolder(val binding: PhotoCardBinding) : RecyclerView.View
 
 class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCardDataViewHolder>() {
     var onClick:((data:PhotoData)->Unit)? = null
-    var list:List<PhotoData> = emptyList()
+    var list:List<ItemViewModel> = emptyList()
     // TODO DiffUtilでいい感じに差分更新してくれるみたい。
     // https://qiita.com/Tsutou/items/69a28ebbd69b69e51703
     private val layoutInflater = LayoutInflater.from(context)
 
     override fun getItemCount(): Int {
         return list.size
+    }
+
+    fun setPhotoDataList(list:List<PhotoData>){
+        this.list = list.map{
+            ItemViewModel(it)
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoCardDataViewHolder {
@@ -113,7 +122,7 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
                 val position = viewHolder.adapterPosition // positionを取得
                 val data = list[position]
                 Log.d("setOnClickListener","$position")
-                callback(data)
+                callback(data.photoData)
             }
         }
         return viewHolder
@@ -122,8 +131,30 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
     override fun onBindViewHolder(holder: PhotoCardDataViewHolder, position: Int) {
         // ここではモデルに値をセットしている
         // →DataBindingにより、自動でViewに反映される
-        holder.binding.date = list[position].dateString
-        holder.binding.visibleLocationIcon = list[position].loc != null
-        Glide.with(context).load(list[position].uri).into(holder.binding.imageView)
+        holder.binding.viewModel = list[position]
+        Glide.with(context).load(list[position].getUri()).into(holder.binding.imageView)
     }
 }
+
+class MainViewModel {
+    var callback:(()->Unit)? = null
+    fun onCheckedChanged(checked: Boolean) {
+        callback?.let{
+            it()
+        }
+    }
+}
+
+class ItemViewModel(val photoData:PhotoData){
+    fun getDate():String {
+        return photoData.dateString
+    }
+    fun getUri():Uri {
+        return photoData.uri
+    }
+    fun getVisibleLocationIcon():Boolean {
+        return photoData.loc != null
+    }
+
+}
+
