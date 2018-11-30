@@ -93,6 +93,8 @@ class MainActivity : AppCompatActivity() {
     class MyRecycleAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCardDataViewHolder>() {
         var onClick:((data:PhotoData)->Unit)? = null
         var list:List<PhotoData> = emptyList()
+        // TODO DiffUtilでいい感じに差分更新してくれるみたい。
+        // https://qiita.com/Tsutou/items/69a28ebbd69b69e51703
         private val layoutInflater = LayoutInflater.from(context)
 
         override fun getItemCount(): Int {
@@ -100,8 +102,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoCardDataViewHolder {
-            val binding:PhotoCardBinding = DataBindingUtil.inflate(layoutInflater,
-                R.layout.photo_card, parent, false)
+            val binding = PhotoCardBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false)
             // クリックリスナを搭載
             val viewHolder = PhotoCardDataViewHolder(binding)
             onClick?.let { callback ->
