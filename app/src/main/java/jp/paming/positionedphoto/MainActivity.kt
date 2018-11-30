@@ -79,8 +79,9 @@ class MainActivity : AppCompatActivity() {
 
 
     fun onClick(photoData:PhotoData){
-        val intent = Intent(this, DetailActivity::class.java)
-        intent.putExtra(DetailActivity.INTENT_EXTRA_PHOTODATA, photoData)
+        val intent = Intent(this, DetailActivity::class.java).apply {
+            putExtra(DetailActivity.INTENT_EXTRA_PHOTODATA, photoData)
+        }
         this.startActivity(intent)
     }
 
@@ -103,12 +104,12 @@ class MainActivity : AppCompatActivity() {
                 R.layout.photo_card, parent, false)
             // クリックリスナを搭載
             val viewHolder = PhotoCardDataViewHolder(binding)
-            onClick?.let {
+            onClick?.let { callback ->
                 binding.root.setOnClickListener{
                     val position = viewHolder.adapterPosition // positionを取得
                     val data = list[position]
                     Log.d("setOnClickListener","$position")
-                    it(data)
+                    callback(data)
                 }
             }
             return viewHolder
