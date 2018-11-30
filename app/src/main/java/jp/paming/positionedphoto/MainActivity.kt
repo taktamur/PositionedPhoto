@@ -25,10 +25,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         onCreatePhotoPermission {
-            readAndShowPhoto(locswitch.isChecked)
+            readAndShowPhoto()
         }
         locswitch.setOnCheckedChangeListener { buttonView, isChecked ->
-            readAndShowPhoto(isChecked)
+            readAndShowPhoto()
         }
     }
 
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
 
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
-                    readAndShowPhoto(locswitch.isChecked)
+                    readAndShowPhoto()
 
                 } else {
 
@@ -58,31 +58,40 @@ class MainActivity : AppCompatActivity() {
         // permissions this app might request
     }
 
-    private fun readAndShowPhoto(onlyLoc:Boolean){
+    private fun readAndShowPhoto(){
         var photoDataList = read()
-        Log.d("photoDataList","${photoDataList}")
-        if( onlyLoc ) {
+        Log.d("photoDataList","$photoDataList")
+        if( locswitch.isChecked ) {
             photoDataList = photoDataList.filter {
                 it.loc != null
             }
         }
-        Log.d("photoDataList_loc","${photoDataList}")
-        val layoutManager = GridLayoutManager(this,2)
-        recycleView.layoutManager = layoutManager
-        recycleView.adapter = MyRecycleAdapter(
-            this,
-            contentResolver,
-            photoDataList
-        )
+        Log.d("photoDataList_loc","$photoDataList")
+
+        recycleView.also {
+            it.layoutManager = GridLayoutManager(this, 2)
+            it.adapter = MyRecycleAdapter(this).also {
+                it.onClick = ::onClick
+                it.list = photoDataList
+            }
+        }
     }
 
+
+    fun onClick(photoData:PhotoData){
+        val intent = Intent(this, DetailActivity::class.java)
+        intent.putExtra(DetailActivity.INTENT_EXTRA_PHOTODATA, photoData)
+        this.startActivity(intent)
+    }
 
     // RecyclerView.ViewHolderを継承した自作ViewHolder
     // 親クラスの初期化にはBinding.rootで親Viewを渡し、
     // 子クラスはbindingを保持する
     class PhotoCardDataViewHolder(val binding: PhotoCardBinding) : RecyclerView.ViewHolder(binding.root)
 
-    class MyRecycleAdapter(val context: Context, val contentResolver: ContentResolver, val list:List<PhotoData>) : RecyclerView.Adapter<PhotoCardDataViewHolder>() {
+    class MyRecycleAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCardDataViewHolder>() {
+        var onClick:((data:PhotoData)->Unit)? = null
+        var list:List<PhotoData> = emptyList()
         private val layoutInflater = LayoutInflater.from(context)
 
         override fun getItemCount(): Int {
@@ -94,14 +103,13 @@ class MainActivity : AppCompatActivity() {
                 R.layout.photo_card, parent, false)
             // クリックリスナを搭載
             val viewHolder = PhotoCardDataViewHolder(binding)
-            // TODO lisnerを外出し
-            binding.root.setOnClickListener{
-                val position = viewHolder.getAdapterPosition() // positionを取得
-                // 何かの処理をします
-                Log.d("setOnClickListener","$position")
-                val intent = Intent(context, DetailActivity::class.java)
-                intent.putExtra(DetailActivity.INTENT_EXTRA_PHOTODATA, list[position])
-                context.startActivity(intent)
+            onClick?.let {
+                binding.root.setOnClickListener{
+                    val position = viewHolder.adapterPosition // positionを取得
+                    val data = list[position]
+                    Log.d("setOnClickListener","$position")
+                    it(data)
+                }
             }
             return viewHolder
         }
