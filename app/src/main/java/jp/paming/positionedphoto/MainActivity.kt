@@ -13,7 +13,10 @@ import jp.paming.positionedphoto.databinding.PhotoCardBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.databinding.BindingAdapter
+import android.databinding.ObservableArrayList
 import android.net.Uri
+import android.support.v7.util.DiffUtil
 import android.widget.Toast
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
 
@@ -70,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         Log.d("photoDataList_loc","$photoDataList")
-
+        binding.viewModel?.updatePhotoList(photoDataList)
         binding.adapter = ItemAdapter(this).also {
             it.onClick = ::onClick
             it.setPhotoDataList( photoDataList )
@@ -93,19 +96,21 @@ class MainActivity : AppCompatActivity() {
 // 子クラスはbindingを保持する
 class PhotoCardDataViewHolder(val binding: PhotoCardBinding) : RecyclerView.ViewHolder(binding.root)
 
+//class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCardDataViewHolder>() {
 class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCardDataViewHolder>() {
     var onClick:((data:PhotoData)->Unit)? = null
-    var list:List<ItemViewModel> = emptyList()
+    var items:List<ItemViewModel> = listOf()
+
     // TODO DiffUtilでいい感じに差分更新してくれるみたい。
     // https://qiita.com/Tsutou/items/69a28ebbd69b69e51703
-    private val layoutInflater = LayoutInflater.from(context)
+//    private val layoutInflater = LayoutInflater.from(context)
 
     override fun getItemCount(): Int {
-        return list.size
+        return items.size
     }
 
     fun setPhotoDataList(list:List<PhotoData>){
-        this.list = list.map{
+        this.items = list.map{
             ItemViewModel(it)
         }
     }
@@ -120,7 +125,7 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
         onClick?.let { callback ->
             binding.root.setOnClickListener{
                 val position = viewHolder.adapterPosition // positionを取得
-                val data = list[position]
+                val data = items[position]
                 Log.d("setOnClickListener","$position")
                 callback(data.photoData)
             }
@@ -131,17 +136,28 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
     override fun onBindViewHolder(holder: PhotoCardDataViewHolder, position: Int) {
         // ここではモデルに値をセットしている
         // →DataBindingにより、自動でViewに反映される
-        holder.binding.viewModel = list[position]
-        Glide.with(context).load(list[position].getUri()).into(holder.binding.imageView)
+        holder.binding.viewModel = items[position]
+        Glide.with(context).load(items[position].getUri()).into(holder.binding.imageView)
     }
+
 }
+
+
 
 class MainViewModel {
     var callback:(()->Unit)? = null
+    val items: ObservableArrayList<ItemViewModel> = ObservableArrayList()
+
     fun onCheckedChanged(checked: Boolean) {
         callback?.let{
             it()
         }
+    }
+    fun updatePhotoList(list:List<PhotoData>){
+        items.clear()
+        items.addAll(list.map{
+            ItemViewModel(it)
+        })
     }
 }
 
@@ -158,3 +174,36 @@ class ItemViewModel(val photoData:PhotoData){
 
 }
 
+class Callback(private val old: List<ItemViewModel>,
+               private val new: List<ItemViewModel>) : DiffUtil.Callback() {
+    override fun getOldListSize(): Int = old.size
+    override fun getNewListSize(): Int = new.size
+
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+        old[oldItemPosition].getUri() == new[newItemPosition].getUri()
+
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+        old[oldItemPosition].getUri() == new[newItemPosition].getUri()
+}
+
+object RecyclerViewBindingAdapter {
+    @BindingAdapter("app:viewModels")
+    @JvmStatic
+    fun setViewModels(recyclerView: RecyclerView, items: ObservableArrayList<ItemViewModel>) {
+        val adapter = recyclerView.adapter as ItemAdapter
+        val diff = DiffUtil.calculateDiff(Callback(adapter.items, items), true)
+        // ここでListに変換してあげないとdispatchUpdatesToをかけれない
+        adapter.items = items.toList()
+        diff.dispatchUpdatesTo(adapter)
+    }
+}
+
+@BindingAdapter("app:viewModels")
+fun RecyclerView.setViewModels(recyclerView: RecyclerView, items: ObservableArrayList<ItemViewModel>) {
+    val adapter = recyclerView.adapter as ItemAdapter
+    val diff = DiffUtil.calculateDiff(Callback(adapter.items, items), true)
+    // ここでListに変換してあげないとdispatchUpdatesToをかけれない
+    adapter.items = items.toList()
+    diff.dispatchUpdatesTo(adapter)
+}
