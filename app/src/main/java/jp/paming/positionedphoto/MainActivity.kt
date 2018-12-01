@@ -19,8 +19,9 @@ import android.support.v7.util.DiffUtil
 import android.widget.ImageView
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
 import android.arch.lifecycle.ViewModelProvider
-
-
+import android.content.res.Configuration
+import android.support.v7.widget.GridLayoutManager
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
@@ -43,10 +44,20 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
         val binding:ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.viewModel = mainViewModel
         binding.adapter = ItemAdapter()
+        updateGridSpanSize()
         onCreatePhotoPermission {
-            updateMainViewModel()
+            mainViewModel.update()
         }
         // TODO RecyclerViewの縦インジケータ表示
+    }
+
+    private fun updateGridSpanSize(){
+        val spanCount = when( resources.configuration.orientation ){
+            Configuration.ORIENTATION_PORTRAIT -> 2
+            Configuration.ORIENTATION_LANDSCAPE -> 4
+            else -> 1
+        }
+        (recycleView.layoutManager as GridLayoutManager)?.spanCount = spanCount
     }
 
     override fun onRequestPermissionsResult(
@@ -58,12 +69,8 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
             permissions,
             grantResults
         ){
-            updateMainViewModel()
+            mainViewModel.update()
         }
-    }
-
-    private fun updateMainViewModel(){
-        mainViewModel.update()
     }
 
     override fun onClickItem(photoData: PhotoData) {
@@ -73,6 +80,51 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
         this.startActivity(intent)
     }
 }
+
+class MainViewModel(
+    private var repository:PhotoRepository,
+    private var listener:ItemViewModel.Listener
+): ViewModel(),ItemViewModel.Listener {
+
+    // ここはObservable<T>でないと、DataBindingを経由して変更通知が届かない
+    // TODO LiveData化
+    val items: ObservableArrayList<ItemViewModel> = ObservableArrayList()
+
+    var onlyPositioned: Boolean = true
+
+    // TODO GridLayoutManagerのSpanCountをLiveDataで伝達
+
+    // TODO 双方向バインディング化
+    fun onCheckedChanged(checked: Boolean) {
+        onlyPositioned = checked
+        this.update()
+    }
+
+    fun update() {
+        val list = repository.find(onlyPositioned)
+        items.clear()
+        // TODO 日付でのソート
+        items.addAll(list.map {
+            ItemViewModel(it, this)
+        })
+    }
+
+    override fun onClickItem(photoData: PhotoData) {
+        listener.onClickItem(photoData)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    class Factory(var repository:PhotoRepository,
+                  var listener:ItemViewModel.Listener) : ViewModelProvider.NewInstanceFactory() {
+
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return MainViewModel(repository,listener) as T
+        }
+    }
+}
+
+
+
 
 // RecyclerView.ViewHolderを継承した自作ViewHolder
 // 親クラスの初期化にはBinding.rootで親Viewを渡し、
@@ -127,46 +179,6 @@ fun RecyclerView.setViewModels(newItems: List<ItemViewModel>) {
     val adapter = this.adapter as ItemAdapter
     adapter.update(newItems.toList())
 }
-
-class MainViewModel(
-    private var repository:PhotoRepository,
-    private var listener:ItemViewModel.Listener
-): ViewModel(),ItemViewModel.Listener {
-
-    // ここはObservable<T>でないと、DataBindingを経由して変更通知が届かない
-    val items: ObservableArrayList<ItemViewModel> = ObservableArrayList()
-
-    var onlyPositioned: Boolean = true
-
-    // TODO 双方向バインディング化
-    fun onCheckedChanged(checked: Boolean) {
-        onlyPositioned = checked
-        this.update()
-    }
-
-    fun update() {
-        val list = repository.find(onlyPositioned)
-        items.clear()
-        // TODO 日付でのソート
-        items.addAll(list.map {
-            ItemViewModel(it, this)
-        })
-    }
-
-    override fun onClickItem(photoData: PhotoData) {
-        listener.onClickItem(photoData)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    class Factory(var repository:PhotoRepository,
-                  var listener:ItemViewModel.Listener) : ViewModelProvider.NewInstanceFactory() {
-
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return MainViewModel(repository,listener) as T
-        }
-    }
-}
-
 
 
 class ItemViewModel(private val photoData:PhotoData,
