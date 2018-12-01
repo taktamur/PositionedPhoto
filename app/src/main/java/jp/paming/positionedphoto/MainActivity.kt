@@ -1,5 +1,8 @@
 package jp.paming.positionedphoto
 
+import android.arch.lifecycle.LifecycleOwner
+import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelProviders
 import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -8,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
 import jp.paming.positionedphoto.databinding.PhotoCardBinding
-import kotlinx.android.synthetic.main.activity_main.*
 import android.content.Intent
 import android.databinding.BindingAdapter
 import android.databinding.ObservableArrayList
@@ -18,16 +20,20 @@ import android.widget.ImageView
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
 
 
-class MainActivity : AppCompatActivity(),ItemViewModel.Listener {
+class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
 
-    private lateinit var binding:ActivityMainBinding
+    private lateinit var mainViewModel:MainViewModel
 
+    // TODO 横画面では4行表示にする
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        mainViewModel.listener = this
+        mainViewModel.repository = PhotoRepositoryImpl(this)
 
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        binding.viewModel = MainViewModel(PhotoRepositoryImpl(this),this)
+        val binding:ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        binding.viewModel = mainViewModel
         binding.adapter = ItemAdapter()
         onCreatePhotoPermission {
             updateMainViewModel()
@@ -49,7 +55,7 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener {
     }
 
     private fun updateMainViewModel(){
-        binding.viewModel?.update()
+        mainViewModel.update()
     }
 
     override fun onClickItem(photoData: PhotoData) {
@@ -114,21 +120,23 @@ fun RecyclerView.setViewModels(newItems: List<ItemViewModel>) {
     adapter.update(newItems.toList())
 }
 
-class MainViewModel(private val repository:PhotoRepository,
-                    private val listener:ItemViewModel.Listener):ItemViewModel.Listener {
+class MainViewModel(): ViewModel(),ItemViewModel.Listener {
+    var repository:PhotoRepository? = null
+    var listener:ItemViewModel.Listener? = null
+
     // ここはObservable<T>でないと、DataBindingを経由して変更通知が届かない
     val items: ObservableArrayList<ItemViewModel> = ObservableArrayList()
 
     var onlyPositioned:Boolean = true
 
-    // TODO Switchの内容をプロパティ化&双方向バインディング
+    // TODO 双方向バインディング化
     fun onCheckedChanged(checked: Boolean) {
         onlyPositioned = checked
         this.update()
     }
 
     fun update(){
-        val list = repository.find(onlyPositioned)
+        val list = repository?.find(onlyPositioned) ?: emptyList()
         items.clear()
         // TODO 日付でのソート
         items.addAll(list.map{
@@ -137,7 +145,7 @@ class MainViewModel(private val repository:PhotoRepository,
     }
 
     override fun onClickItem(photoData:PhotoData) {
-        listener.onClickItem(photoData)
+        listener?.onClickItem(photoData)
     }
 }
 

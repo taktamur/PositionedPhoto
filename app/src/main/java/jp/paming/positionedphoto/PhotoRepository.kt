@@ -29,6 +29,7 @@ interface PhotoRepository{
     fun find(isPositioned:Boolean): List<PhotoData>
 }
 
+// TODO 日付と緯度経度は、ファイルの内容から取得するように変更
 class PhotoRepositoryImpl(context: Context):PhotoRepository {
     private val contentResolver = context.contentResolver
 
