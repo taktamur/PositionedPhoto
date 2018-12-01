@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity(),LifecycleOwner {
                     it.updateGridSpanListener = manager::setSpanCount
                 }
             }
-        binding.viewModel = mainViewModel
+        binding.mainViewModel = mainViewModel
         binding.adapter = ItemAdapter()
 
         mainViewModel.updateGridSpanCount()

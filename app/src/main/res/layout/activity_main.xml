@@ -8,7 +8,7 @@
     <data>
         <variable name="adapter"
                   type="jp.paming.positionedphoto.ItemAdapter"/>
-        <variable name="viewModel"
+        <variable name="mainViewModel"
                   type="jp.paming.positionedphoto.MainViewModel"/>
     </data>
     <android.support.constraint.ConstraintLayout
@@ -23,8 +23,8 @@
                 app:layout_constraintStart_toStartOf="parent"
                 android:layout_marginStart="8dp"
                 android:layout_width="wrap_content"
-                android:onCheckedChanged="@{(switch, checked) -> viewModel.onCheckedChanged(checked)}"
-                  android:checked="@{viewModel.onlyPositioned}"
+                android:onCheckedChanged="@{(switch, checked) -> mainViewModel.onCheckedChanged(checked)}"
+                  android:checked="@{mainViewModel.onlyPositioned}"
         />
         <android.support.v7.widget.RecyclerView
                 android:layout_width="0dp"
@@ -40,7 +40,7 @@
                 android:layout_height="0dp"
         app:layoutManager="android.support.v7.widget.GridLayoutManager"
         android:adapter="@{adapter}"
-                app:viewModels="@{viewModel.items}"
+                app:viewModels="@{mainViewModel.items}"
         />
     </android.support.constraint.ConstraintLayout>
 </layout>
