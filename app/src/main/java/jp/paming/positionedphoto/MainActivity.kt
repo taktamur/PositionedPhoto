@@ -27,6 +27,12 @@ class MainActivity : AppCompatActivity(),LifecycleOwner {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        fun ActivityMainBinding.getGridLayoutManager():GridLayoutManager? {
+            return (this.recycleView.layoutManager as? GridLayoutManager)
+        }
+
+        val binding:ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        binding.setLifecycleOwner(this)
 
         // ViewModelProvidersでViewModelを作る時のコンストラクタで値を渡す為に、
         // Factoryクラスを作ってそれで生成している
@@ -36,10 +42,10 @@ class MainActivity : AppCompatActivity(),LifecycleOwner {
                 it.photoRepository = PhotoRepositoryImpl(this)
                 it.orientationService = OrientationServiceImpl(this)
                 it.onClickListener = this::onClickItem
-                it.updateGridSpanListener = this::updateGridSpanCount
+                binding.getGridLayoutManager()?.let{ manager: GridLayoutManager ->
+                    it.updateGridSpanListener = manager::setSpanCount
+                }
             }
-        val binding:ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        binding.setLifecycleOwner(this)
         binding.viewModel = mainViewModel
         binding.adapter = ItemAdapter()
 
@@ -49,7 +55,6 @@ class MainActivity : AppCompatActivity(),LifecycleOwner {
         }
         // TODO RecyclerViewの縦インジケータ表示
     }
-
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -69,10 +74,6 @@ class MainActivity : AppCompatActivity(),LifecycleOwner {
             putExtra(DetailActivity.INTENT_EXTRA_PHOTODATA, photoData)
         }
         this.startActivity(intent)
-    }
-
-    private fun updateGridSpanCount(count: Int) {
-        (recycleView.layoutManager as? GridLayoutManager)?.spanCount = count
     }
 }
 
@@ -186,5 +187,6 @@ class ItemViewModel(private val photoData:PhotoData,
 
 @BindingAdapter("imageUri")
 fun ImageView.loadImage(uri:Uri) {
+    // TODO Cardのサイズいっぱいに引き延ばす
     Glide.with(this.context).load(uri).into(this)
 }

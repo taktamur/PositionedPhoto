@@ -13,7 +13,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 
 class DetailActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object {
-        const val INTENT_EXTRA_PHOTODATA = "IntentExtraUri"
+        const val INTENT_EXTRA_PHOTODATA = "IntentExtraPhotoData"
     }
 
     private lateinit var photoData:PhotoData
