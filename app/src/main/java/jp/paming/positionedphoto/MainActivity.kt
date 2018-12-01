@@ -16,7 +16,6 @@ import android.support.v7.util.DiffUtil
 import android.widget.ImageView
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
 import android.support.v7.widget.GridLayoutManager
-import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity(),LifecycleOwner {
@@ -62,7 +61,6 @@ class MainActivity : AppCompatActivity(),LifecycleOwner {
     ) {
         onRequestPermissionsResultPhotoPermission(
             requestCode,
-            permissions,
             grantResults
         ){
             mainViewModel.updateItems()
@@ -149,8 +147,8 @@ class ItemAdapter : RecyclerView.Adapter<PhotoCardDataViewHolder>() {
         diff.dispatchUpdatesTo(this)
     }
 
-    class Callback(private val old: List<ItemViewModel>,
-                   private val new: List<ItemViewModel>) : DiffUtil.Callback() {
+    private class Callback(private val old: List<ItemViewModel>,
+                           private val new: List<ItemViewModel>) : DiffUtil.Callback() {
         override fun getOldListSize(): Int = old.size
         override fun getNewListSize(): Int = new.size
 
@@ -171,18 +169,14 @@ fun RecyclerView.setViewModels(newItems: List<ItemViewModel>) {
 
 class ItemViewModel(private val photoData:PhotoData,
                     private val listener:((PhotoData)->Unit)?){
-    fun getDate():String {
-        return photoData.dateString
-    }
-    fun getUri():Uri {
-        return photoData.uri
-    }
-    fun getVisibleLocationIcon():Boolean {
-        return photoData.loc != null
-    }
-    fun onClick() {
-        listener?.invoke(photoData)
-    }
+
+    fun getDate():String = photoData.getDateString()
+
+    fun getUri():Uri = photoData.uri
+
+    fun getVisibleLocationIcon():Boolean = (photoData.loc != null)
+
+    fun onClick() = listener?.invoke(photoData)
 }
 
 @BindingAdapter("imageUri")

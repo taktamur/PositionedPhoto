@@ -7,7 +7,7 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 
-val REQUEST_PERMISSION_CODE = 1234
+const val REQUEST_PERMISSION_CODE = 1234
 
 fun AppCompatActivity.onCreatePhotoPermission(grant:()->Unit){
     // Here, thisActivity is the current activity
@@ -43,14 +43,13 @@ fun AppCompatActivity.onCreatePhotoPermission(grant:()->Unit){
 
 fun AppCompatActivity.onRequestPermissionsResultPhotoPermission(
     requestCode: Int,
-    permissions: Array<String>,
     grantResults: IntArray,
     grant:()->Unit
 ) {
     when (requestCode) {
         REQUEST_PERMISSION_CODE -> {
             // If request is cancelled, the result arrays are empty.
-            if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                 // permission was granted, yay! Do the
                 // contacts-related task you need to do.
