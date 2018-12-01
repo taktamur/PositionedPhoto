@@ -40,6 +40,7 @@
         app:layoutManager="android.support.v7.widget.GridLayoutManager"
                 app:spanCount="2"
         android:adapter="@{adapter}"
+                app:viewModels="@{viewModel.items}"
         />
     </android.support.constraint.ConstraintLayout>
 </layout>

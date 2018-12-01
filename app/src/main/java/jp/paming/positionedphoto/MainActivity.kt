@@ -77,7 +77,6 @@ class MainActivity : AppCompatActivity() {
         binding.viewModel?.updatePhotoList(photoDataList)
         binding.adapter = ItemAdapter(this).also {
             it.onClick = ::onClick
-            it.setPhotoDataList( photoDataList )
         }
     }
 
@@ -145,7 +144,9 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
 
 class MainViewModel {
     var callback:(()->Unit)? = null
+    // ここはObservable<T>でないと、DataBindingを経由して変更通知が届かない
     val items: ObservableArrayList<ItemViewModel> = ObservableArrayList()
+
 
     fun onCheckedChanged(checked: Boolean) {
         callback?.let{
@@ -170,7 +171,6 @@ class ItemViewModel(val photoData:PhotoData){
     fun getVisibleLocationIcon():Boolean {
         return photoData.loc != null
     }
-
 }
 
 class Callback(private val old: List<ItemViewModel>,

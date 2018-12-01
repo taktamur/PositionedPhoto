@@ -49,7 +49,7 @@ fun AppCompatActivity.onCreatePhotoPermission(grant:()->Unit){
         grant()
     }
 }
-
+// TODO サービス（リソース）化
 fun AppCompatActivity.read(): List<PhotoData> {
 
     val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} desc"
