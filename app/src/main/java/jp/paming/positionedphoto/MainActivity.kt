@@ -30,10 +30,13 @@ class MainActivity : AppCompatActivity() {
 
         binding = DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
         binding.viewModel = {
-            MainViewModel().also {
+            MainViewModel(PhotoRepositoryImpl(this)).also {
                 it.callback = ::readAndShowPhoto
             }
         }()
+        binding.adapter = ItemAdapter(this).also {
+            it.onClick = ::onClick
+        }
         onCreatePhotoPermission {
             readAndShowPhoto()
         }
@@ -66,18 +69,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun readAndShowPhoto(){
-        var photoDataList = read()
-        Log.d("photoDataList","$photoDataList")
-        if( locswitch.isChecked ) {
-            photoDataList = photoDataList.filter {
-                it.loc != null
-            }
-        }
-        Log.d("photoDataList_loc","$photoDataList")
-        binding.viewModel?.updatePhotoList(photoDataList)
-        binding.adapter = ItemAdapter(this).also {
-            it.onClick = ::onClick
-        }
+        binding.viewModel?.update(locswitch.isChecked )
     }
 
 
@@ -109,18 +101,13 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
         return items.size
     }
 
-    fun setPhotoDataList(list:List<PhotoData>){
-        this.items = list.map{
-            ItemViewModel(it)
-        }
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoCardDataViewHolder {
         val binding = PhotoCardBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false)
         // クリックリスナを搭載
+        // TODO クリックイベントはViewModel経由に変更
         val viewHolder = PhotoCardDataViewHolder(binding)
         onClick?.let { callback ->
             binding.root.setOnClickListener{
@@ -142,11 +129,10 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
 }
 
 
-class MainViewModel {
+class MainViewModel(val repository:PhotoRepository) {
     var callback:(()->Unit)? = null
     // ここはObservable<T>でないと、DataBindingを経由して変更通知が届かない
     val items: ObservableArrayList<ItemViewModel> = ObservableArrayList()
-
 
     fun onCheckedChanged(checked: Boolean) {
         callback?.let{
@@ -158,6 +144,10 @@ class MainViewModel {
         items.addAll(list.map{
             ItemViewModel(it)
         })
+    }
+    fun update(isPositioned:Boolean){
+        val items = repository.find(isPositioned)
+        this.updatePhotoList(items)
     }
 }
 
