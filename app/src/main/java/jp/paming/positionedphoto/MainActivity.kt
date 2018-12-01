@@ -18,6 +18,9 @@ import android.net.Uri
 import android.support.v7.util.DiffUtil
 import android.widget.ImageView
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
+import android.arch.lifecycle.ViewModelProvider
+
+
 
 
 class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
@@ -28,9 +31,14 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-        mainViewModel.listener = this
-        mainViewModel.repository = PhotoRepositoryImpl(this)
+        // ViewModelProvidersでViewModelを作る時のコンストラクタで値を渡す為に、
+        // Factoryクラスを作ってそれで生成している
+        mainViewModel = ViewModelProviders.of(
+            this,
+            MainViewModel.Factory(
+                PhotoRepositoryImpl(this),
+                this)
+        ).get(MainViewModel::class.java)
 
         val binding:ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.viewModel = mainViewModel
@@ -120,14 +128,15 @@ fun RecyclerView.setViewModels(newItems: List<ItemViewModel>) {
     adapter.update(newItems.toList())
 }
 
-class MainViewModel(): ViewModel(),ItemViewModel.Listener {
-    var repository:PhotoRepository? = null
-    var listener:ItemViewModel.Listener? = null
+class MainViewModel(
+    private var repository:PhotoRepository,
+    private var listener:ItemViewModel.Listener
+): ViewModel(),ItemViewModel.Listener {
 
     // ここはObservable<T>でないと、DataBindingを経由して変更通知が届かない
     val items: ObservableArrayList<ItemViewModel> = ObservableArrayList()
 
-    var onlyPositioned:Boolean = true
+    var onlyPositioned: Boolean = true
 
     // TODO 双方向バインディング化
     fun onCheckedChanged(checked: Boolean) {
@@ -135,19 +144,30 @@ class MainViewModel(): ViewModel(),ItemViewModel.Listener {
         this.update()
     }
 
-    fun update(){
-        val list = repository?.find(onlyPositioned) ?: emptyList()
+    fun update() {
+        val list = repository.find(onlyPositioned)
         items.clear()
         // TODO 日付でのソート
-        items.addAll(list.map{
-            ItemViewModel(it,this)
+        items.addAll(list.map {
+            ItemViewModel(it, this)
         })
     }
 
-    override fun onClickItem(photoData:PhotoData) {
-        listener?.onClickItem(photoData)
+    override fun onClickItem(photoData: PhotoData) {
+        listener.onClickItem(photoData)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    class Factory(var repository:PhotoRepository,
+                  var listener:ItemViewModel.Listener) : ViewModelProvider.NewInstanceFactory() {
+
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return MainViewModel(repository,listener) as T
+        }
     }
 }
+
+
 
 class ItemViewModel(private val photoData:PhotoData,
                     private val listener:Listener){
