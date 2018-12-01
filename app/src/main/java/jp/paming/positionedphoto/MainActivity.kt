@@ -5,7 +5,6 @@ import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
@@ -100,14 +99,7 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
             LayoutInflater.from(parent.context),
             parent,
             false)
-        // クリックリスナを搭載
-        val viewHolder = PhotoCardDataViewHolder(binding)
-        binding.root.setOnClickListener{
-            val position = viewHolder.adapterPosition // positionを取得
-            val data = items[position]
-            data.onClick()
-        }
-        return viewHolder
+        return PhotoCardDataViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: PhotoCardDataViewHolder, position: Int) {
