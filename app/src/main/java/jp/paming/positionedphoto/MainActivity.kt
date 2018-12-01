@@ -1,6 +1,7 @@
 package jp.paming.positionedphoto
 
 import android.arch.lifecycle.*
+import android.content.Context
 import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -11,7 +12,6 @@ import com.bumptech.glide.Glide
 import jp.paming.positionedphoto.databinding.PhotoCardBinding
 import android.content.Intent
 import android.databinding.BindingAdapter
-import android.databinding.ObservableArrayList
 import android.net.Uri
 import android.support.v7.util.DiffUtil
 import android.widget.ImageView
@@ -25,7 +25,6 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
 
     private lateinit var mainViewModel:MainViewModel
 
-    // TODO 横画面では4行表示にする
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -34,6 +33,7 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
         mainViewModel = ViewModelProviders.of(
             this,
             MainViewModel.Factory(
+                this,
                 PhotoRepositoryImpl(this),
                 this)
         ).get(MainViewModel::class.java)
@@ -42,21 +42,19 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
         binding.setLifecycleOwner(this)
         binding.viewModel = mainViewModel
         binding.adapter = ItemAdapter()
-        updateGridSpanSize()
+
+        mainViewModel.spanCount.observe(this, Observer {
+            it?.let{
+                (recycleView.layoutManager as GridLayoutManager)?.spanCount = it
+            }
+        })
+        mainViewModel.updateGridSpanSize()
         onCreatePhotoPermission {
             mainViewModel.update()
         }
         // TODO RecyclerViewの縦インジケータ表示
     }
 
-    private fun updateGridSpanSize(){
-        val spanCount = when( resources.configuration.orientation ){
-            Configuration.ORIENTATION_PORTRAIT -> 2
-            Configuration.ORIENTATION_LANDSCAPE -> 4
-            else -> 1
-        }
-        (recycleView.layoutManager as GridLayoutManager)?.spanCount = spanCount
-    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -80,6 +78,7 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
 }
 
 class MainViewModel(
+    private val context: Context,
     private var repository:PhotoRepository,
     private var listener:ItemViewModel.Listener
 ): ViewModel(),ItemViewModel.Listener {
@@ -88,7 +87,7 @@ class MainViewModel(
     val items: MutableLiveData<List<ItemViewModel>> = MutableLiveData()
     var onlyPositioned: Boolean = true
 
-    // TODO GridLayoutManagerのSpanCountをLiveDataで伝達
+    val spanCount:MutableLiveData<Int> = MutableLiveData()
 
     // TODO 双方向バインディング化
     fun onCheckedChanged(checked: Boolean) {
@@ -107,12 +106,23 @@ class MainViewModel(
         listener.onClickItem(photoData)
     }
 
+    fun updateGridSpanSize(){
+        val spanCount = when( context.resources.configuration.orientation ){
+            Configuration.ORIENTATION_PORTRAIT -> 2
+            Configuration.ORIENTATION_LANDSCAPE -> 4
+            else -> 1
+        }
+        this.spanCount.value = spanCount
+//        (recycleView.layoutManager as GridLayoutManager)?.spanCount = spanCount
+    }
+
     @Suppress("UNCHECKED_CAST")
-    class Factory(var repository:PhotoRepository,
+    class Factory(var context:Context,
+                  var repository:PhotoRepository,
                   var listener:ItemViewModel.Listener) : ViewModelProvider.NewInstanceFactory() {
 
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return MainViewModel(repository,listener) as T
+            return MainViewModel(context,repository,listener) as T
         }
     }
 }
