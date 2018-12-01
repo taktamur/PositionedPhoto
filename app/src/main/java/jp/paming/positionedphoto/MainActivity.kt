@@ -22,21 +22,17 @@ import android.widget.Toast
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),ItemViewModel.Listener {
+
+
     lateinit var binding:ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         binding = DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main)
-        binding.viewModel = {
-            MainViewModel(PhotoRepositoryImpl(this)).also {
-                it.callback = ::readAndShowPhoto
-            }
-        }()
-        binding.adapter = ItemAdapter(this).also {
-            it.onClick = ::onClick
-        }
+        binding.viewModel = MainViewModel(PhotoRepositoryImpl(this),this)
+        binding.adapter = ItemAdapter(this)
         onCreatePhotoPermission {
             readAndShowPhoto()
         }
@@ -72,13 +68,11 @@ class MainActivity : AppCompatActivity() {
         binding.viewModel?.update(locswitch.isChecked )
     }
 
-
-    fun onClick(photoData:PhotoData){
+    override fun onClickItem(photoData: PhotoData) {
         val intent = Intent(this, DetailActivity::class.java).apply {
             putExtra(DetailActivity.INTENT_EXTRA_PHOTODATA, photoData)
         }
-        this.startActivity(intent)
-    }
+        this.startActivity(intent)    }
 
 
 }
@@ -107,15 +101,11 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
             parent,
             false)
         // クリックリスナを搭載
-        // TODO クリックイベントはViewModel経由に変更
         val viewHolder = PhotoCardDataViewHolder(binding)
-        onClick?.let { callback ->
-            binding.root.setOnClickListener{
-                val position = viewHolder.adapterPosition // positionを取得
-                val data = items[position]
-                Log.d("setOnClickListener","$position")
-                callback(data.photoData)
-            }
+        binding.root.setOnClickListener{
+            val position = viewHolder.adapterPosition // positionを取得
+            val data = items[position]
+            data.onClick()
         }
         return viewHolder
     }
@@ -129,29 +119,31 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
 }
 
 
-class MainViewModel(val repository:PhotoRepository) {
-    var callback:(()->Unit)? = null
+class MainViewModel(private val repository:PhotoRepository,val listener:ItemViewModel.Listener):ItemViewModel.Listener {
     // ここはObservable<T>でないと、DataBindingを経由して変更通知が届かない
     val items: ObservableArrayList<ItemViewModel> = ObservableArrayList()
-
+    // TODO Switchの内容をプロパティ化&双方向バインディング
     fun onCheckedChanged(checked: Boolean) {
-        callback?.let{
-            it()
-        }
+        this.update(checked)
     }
-    fun updatePhotoList(list:List<PhotoData>){
+
+    fun update(isPositioned:Boolean){
+        val list = repository.find(isPositioned)
         items.clear()
+        // TODO 日付でのソート
         items.addAll(list.map{
-            ItemViewModel(it)
+            ItemViewModel(it,this)
         })
     }
-    fun update(isPositioned:Boolean){
-        val items = repository.find(isPositioned)
-        this.updatePhotoList(items)
+
+    override fun onClickItem(photoData:PhotoData) {
+        listener.onClickItem(photoData)
     }
+
+
 }
 
-class ItemViewModel(val photoData:PhotoData){
+class ItemViewModel(val photoData:PhotoData, val listener:Listener){
     fun getDate():String {
         return photoData.dateString
     }
@@ -160,6 +152,12 @@ class ItemViewModel(val photoData:PhotoData){
     }
     fun getVisibleLocationIcon():Boolean {
         return photoData.loc != null
+    }
+    fun onClick() {
+        listener.onClickItem(photoData)
+    }
+    interface Listener{
+        fun onClickItem(photoData:PhotoData)
     }
 }
 
@@ -180,6 +178,7 @@ class Callback(private val old: List<ItemViewModel>,
 @BindingAdapter("app:viewModels")
 fun RecyclerView.setViewModels(items: ObservableArrayList<ItemViewModel>) {
     val adapter = this.adapter as ItemAdapter
+    // TODO ここから下はAdapterに移動
     val diff = DiffUtil.calculateDiff(Callback(adapter.items, items), true)
     // ここでListに変換してあげないとdispatchUpdatesToをかけれない
     adapter.items = items.toList()
