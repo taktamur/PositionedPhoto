@@ -32,10 +32,7 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
         // Factoryクラスを作ってそれで生成している
         mainViewModel = ViewModelProviders.of(
             this,
-            MainViewModel.Factory(
-                this,
-                PhotoRepositoryImpl(this),
-                this)
+            MainActivity.Factory(this)
         ).get(MainViewModel::class.java)
 
         val binding:ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
@@ -75,18 +72,28 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
         }
         this.startActivity(intent)
     }
+
+    @Suppress("UNCHECKED_CAST")
+    class Factory(var context:MainActivity) : ViewModelProvider.NewInstanceFactory() {
+
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return MainViewModel().also{
+                it.context = context
+                it.repository = PhotoRepositoryImpl(context)
+                it.listener = context
+            } as T
+        }
+    }
 }
 
-class MainViewModel(
-    private val context: Context,
-    private var repository:PhotoRepository,
-    private var listener:ItemViewModel.Listener
-): ViewModel(),ItemViewModel.Listener {
+class MainViewModel: ViewModel(),ItemViewModel.Listener {
+    var context: Context? = null
+    var repository:PhotoRepository? = null
+    var listener:ItemViewModel.Listener? = null
 
     // ここはObservable<T>やLiveDataでないと、DataBindingを経由して変更通知が届かない
     val items: MutableLiveData<List<ItemViewModel>> = MutableLiveData()
     var onlyPositioned: Boolean = true
-
     val spanCount:MutableLiveData<Int> = MutableLiveData()
 
     // TODO 双方向バインディング化
@@ -96,34 +103,23 @@ class MainViewModel(
     }
 
     fun update() {
-        val list = repository.find(onlyPositioned)
+        val list = repository?.find(onlyPositioned) ?: emptyList()
         items.value = list.map {
             ItemViewModel(it, this)
         }
     }
 
     override fun onClickItem(photoData: PhotoData) {
-        listener.onClickItem(photoData)
+        listener?.onClickItem(photoData)
     }
 
     fun updateGridSpanSize(){
-        val spanCount = when( context.resources.configuration.orientation ){
+        val spanCount = when( context?.resources?.configuration?.orientation ){
             Configuration.ORIENTATION_PORTRAIT -> 2
             Configuration.ORIENTATION_LANDSCAPE -> 4
             else -> 1
         }
         this.spanCount.value = spanCount
-//        (recycleView.layoutManager as GridLayoutManager)?.spanCount = spanCount
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    class Factory(var context:Context,
-                  var repository:PhotoRepository,
-                  var listener:ItemViewModel.Listener) : ViewModelProvider.NewInstanceFactory() {
-
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return MainViewModel(context,repository,listener) as T
-        }
     }
 }
 
