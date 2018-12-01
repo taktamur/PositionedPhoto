@@ -137,7 +137,7 @@ class ItemAdapter(private val context: Context) : RecyclerView.Adapter<PhotoCard
     override fun onBindViewHolder(holder: PhotoCardDataViewHolder, position: Int) {
         // ここではモデルに値をセットしている
         // →DataBindingにより、自動でViewに反映される
-        holder.binding.viewModel = items[position]
+        holder.binding.itemViewModel = items[position]
     }
 
 }

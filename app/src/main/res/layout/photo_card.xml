@@ -7,7 +7,7 @@
         <import type="android.view.View"/>
         <!--variable name="date" type="String"/ -->
         <!-- variable name="visibleLocationIcon" type="Boolean"/ -->
-        <variable name="viewModel"
+        <variable name="itemViewModel"
                   type="jp.paming.positionedphoto.ItemViewModel"/>
     </data>
     <android.support.v7.widget.CardView
@@ -24,7 +24,7 @@
                                                      android:layout_height="wrap_content">
 
             <TextView
-                    android:text="@{viewModel.date}"
+                    android:text="@{itemViewModel.date}"
                     android:layout_height="wrap_content"
                     android:id="@+id/textView"
                     app:layout_constraintStart_toStartOf="parent"
@@ -43,13 +43,13 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:imageUri="@{viewModel.uri}"/>
+                    app:imageUri="@{itemViewModel.uri}"/>
             <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:srcCompat="@drawable/ic_location_on_black_24dp"
                     android:id="@+id/imageView2"
-                    android:visibility="@{viewModel.visibleLocationIcon ? View.VISIBLE:View.GONE}"
+                    android:visibility="@{itemViewModel.visibleLocationIcon ? View.VISIBLE:View.GONE}"
                     card_view:layout_constraintTop_toTopOf="parent"
                     android:layout_marginTop="8dp" card_view:layout_constraintStart_toStartOf="parent"
                     android:layout_marginStart="8dp" card_view:layout_constraintEnd_toStartOf="@+id/imageView"
