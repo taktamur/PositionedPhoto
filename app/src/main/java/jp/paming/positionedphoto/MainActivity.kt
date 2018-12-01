@@ -11,13 +11,11 @@ import com.bumptech.glide.Glide
 import jp.paming.positionedphoto.databinding.PhotoCardBinding
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.databinding.BindingAdapter
 import android.databinding.ObservableArrayList
 import android.net.Uri
 import android.support.v7.util.DiffUtil
 import android.widget.ImageView
-import android.widget.Toast
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
 
 
@@ -33,37 +31,25 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener {
         binding.viewModel = MainViewModel(PhotoRepositoryImpl(this),this)
         binding.adapter = ItemAdapter(this)
         onCreatePhotoPermission {
-            readAndShowPhoto()
+            updateMainViewModel()
         }
+        // TODO RecyclerViewの縦インジケータ表示
     }
 
-    // TODO extension化
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>, grantResults: IntArray
     ) {
-        when (requestCode) {
-            REQUEST_PERMISSION_CODE -> {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                    readAndShowPhoto()
-
-                } else {
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    Toast.makeText(this, "パーミッションが許可されませんでした。", Toast.LENGTH_SHORT).show()
-                }
-                return
-            }
-        }// other 'case' lines to check for other
-        // permissions this app might request
+        onRequestPermissionsResultPhotoPermission(
+            requestCode,
+            permissions,
+            grantResults
+        ){
+            updateMainViewModel()
+        }
     }
 
-    private fun readAndShowPhoto(){
+    private fun updateMainViewModel(){
         binding.viewModel?.update(locswitch.isChecked )
     }
 
@@ -71,9 +57,8 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener {
         val intent = Intent(this, DetailActivity::class.java).apply {
             putExtra(DetailActivity.INTENT_EXTRA_PHOTODATA, photoData)
         }
-        this.startActivity(intent)    }
-
-
+        this.startActivity(intent)
+    }
 }
 
 // RecyclerView.ViewHolderを継承した自作ViewHolder
