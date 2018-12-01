@@ -19,7 +19,7 @@ import android.support.v7.widget.GridLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 
-class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner,GridSpanUpdater {
+class MainActivity : AppCompatActivity(),LifecycleOwner {
 
     private lateinit var mainViewModel:MainViewModel
 
@@ -33,10 +33,10 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner,G
         mainViewModel = ViewModelProviders.of(this)
             .get(MainViewModel::class.java)
             .also{
-                it.repository = PhotoRepositoryImpl(this)
-                it.listener = this
+                it.photoRepository = PhotoRepositoryImpl(this)
                 it.orientationService = OrientationServiceImpl(this)
-                it.gridSpanUpdater = this
+                it.onClickListener = this::onClickItem
+                it.updateGridSpanListener = this::updateGridSpanCount
             }
         val binding:ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.setLifecycleOwner(this)
@@ -64,27 +64,24 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner,G
         }
     }
 
-    override fun onClickItem(photoData: PhotoData) {
+    private fun onClickItem(photoData: PhotoData) {
         val intent = Intent(this, DetailActivity::class.java).apply {
             putExtra(DetailActivity.INTENT_EXTRA_PHOTODATA, photoData)
         }
         this.startActivity(intent)
     }
 
-    override fun updateGridSpanCount(count: Int) {
+    private fun updateGridSpanCount(count: Int) {
         (recycleView.layoutManager as? GridLayoutManager)?.spanCount = count
     }
 }
 
-interface GridSpanUpdater{
-    fun updateGridSpanCount(count:Int)
-}
 
-class MainViewModel: ViewModel(),ItemViewModel.Listener {
-    var repository:PhotoRepository? = null
-    var listener:ItemViewModel.Listener? = null
+class MainViewModel: ViewModel() {
+    var photoRepository:PhotoRepository? = null
     var orientationService:OrientationService? = null
-    var gridSpanUpdater:GridSpanUpdater? = null
+    var onClickListener:((PhotoData)->Unit)? = null
+    var updateGridSpanListener:((Int)->Unit)? = null
 
     // ここはObservable<T>やLiveDataでないと、DataBindingを経由して変更通知が届かない
     val items: MutableLiveData<List<ItemViewModel>> = MutableLiveData()
@@ -97,14 +94,10 @@ class MainViewModel: ViewModel(),ItemViewModel.Listener {
     }
 
     fun updateItems() {
-        val list = repository?.find(onlyPositioned) ?: emptyList()
+        val list = photoRepository?.find(onlyPositioned) ?: emptyList()
         items.value = list.map {
-            ItemViewModel(it, this)
+            ItemViewModel(it, onClickListener)
         }
-    }
-
-    override fun onClickItem(photoData: PhotoData) {
-        listener?.onClickItem(photoData)
     }
 
     fun updateGridSpanCount(){
@@ -113,7 +106,7 @@ class MainViewModel: ViewModel(),ItemViewModel.Listener {
             Orientation.Landscape -> 4
             else -> 1
         }
-        gridSpanUpdater?.updateGridSpanCount(spanCount)
+        updateGridSpanListener?.invoke(spanCount)
     }
 }
 
@@ -176,7 +169,7 @@ fun RecyclerView.setViewModels(newItems: List<ItemViewModel>) {
 
 
 class ItemViewModel(private val photoData:PhotoData,
-                    private val listener:Listener){
+                    private val listener:((PhotoData)->Unit)?){
     fun getDate():String {
         return photoData.dateString
     }
@@ -187,10 +180,7 @@ class ItemViewModel(private val photoData:PhotoData,
         return photoData.loc != null
     }
     fun onClick() {
-        listener.onClickItem(photoData)
-    }
-    interface Listener{
-        fun onClickItem(photoData:PhotoData)
+        listener?.invoke(photoData)
     }
 }
 
