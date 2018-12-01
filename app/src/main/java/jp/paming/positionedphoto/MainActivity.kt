@@ -1,8 +1,6 @@
 package jp.paming.positionedphoto
 
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProviders
+import android.arch.lifecycle.*
 import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -18,7 +16,6 @@ import android.net.Uri
 import android.support.v7.util.DiffUtil
 import android.widget.ImageView
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
-import android.arch.lifecycle.ViewModelProvider
 import android.content.res.Configuration
 import android.support.v7.widget.GridLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
@@ -42,6 +39,7 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
         ).get(MainViewModel::class.java)
 
         val binding:ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        binding.setLifecycleOwner(this)
         binding.viewModel = mainViewModel
         binding.adapter = ItemAdapter()
         updateGridSpanSize()
@@ -86,10 +84,8 @@ class MainViewModel(
     private var listener:ItemViewModel.Listener
 ): ViewModel(),ItemViewModel.Listener {
 
-    // ここはObservable<T>でないと、DataBindingを経由して変更通知が届かない
-    // TODO LiveData化
-    val items: ObservableArrayList<ItemViewModel> = ObservableArrayList()
-
+    // ここはObservable<T>やLiveDataでないと、DataBindingを経由して変更通知が届かない
+    val items: MutableLiveData<List<ItemViewModel>> = MutableLiveData()
     var onlyPositioned: Boolean = true
 
     // TODO GridLayoutManagerのSpanCountをLiveDataで伝達
@@ -102,11 +98,9 @@ class MainViewModel(
 
     fun update() {
         val list = repository.find(onlyPositioned)
-        items.clear()
-        // TODO 日付でのソート
-        items.addAll(list.map {
+        items.value = list.map {
             ItemViewModel(it, this)
-        })
+        }
     }
 
     override fun onClickItem(photoData: PhotoData) {
