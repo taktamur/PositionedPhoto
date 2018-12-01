@@ -1,7 +1,6 @@
 package jp.paming.positionedphoto
 
 import android.arch.lifecycle.*
-import android.content.Context
 import android.databinding.DataBindingUtil
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -16,38 +15,37 @@ import android.net.Uri
 import android.support.v7.util.DiffUtil
 import android.widget.ImageView
 import jp.paming.positionedphoto.databinding.ActivityMainBinding
-import android.content.res.Configuration
 import android.support.v7.widget.GridLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 
-class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
+class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner,GridSpanUpdater {
 
     private lateinit var mainViewModel:MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+
         // ViewModelProvidersでViewModelを作る時のコンストラクタで値を渡す為に、
         // Factoryクラスを作ってそれで生成している
-        mainViewModel = ViewModelProviders.of(
-            this,
-            MainActivity.Factory(this)
-        ).get(MainViewModel::class.java)
-
+        mainViewModel = ViewModelProviders.of(this)
+            .get(MainViewModel::class.java)
+            .also{
+                it.repository = PhotoRepositoryImpl(this)
+                it.listener = this
+                it.orientationService = OrientationServiceImpl(this)
+                it.gridSpanUpdater = this
+            }
         val binding:ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         binding.setLifecycleOwner(this)
         binding.viewModel = mainViewModel
         binding.adapter = ItemAdapter()
 
-        mainViewModel.spanCount.observe(this, Observer {
-            it?.let{
-                (recycleView.layoutManager as GridLayoutManager)?.spanCount = it
-            }
-        })
-        mainViewModel.updateGridSpanSize()
+        mainViewModel.updateGridSpanCount()
         onCreatePhotoPermission {
-            mainViewModel.update()
+            mainViewModel.updateItems()
         }
         // TODO RecyclerViewの縦インジケータ表示
     }
@@ -62,7 +60,7 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
             permissions,
             grantResults
         ){
-            mainViewModel.update()
+            mainViewModel.updateItems()
         }
     }
 
@@ -73,36 +71,32 @@ class MainActivity : AppCompatActivity(),ItemViewModel.Listener,LifecycleOwner {
         this.startActivity(intent)
     }
 
-    @Suppress("UNCHECKED_CAST")
-    class Factory(var context:MainActivity) : ViewModelProvider.NewInstanceFactory() {
-
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return MainViewModel().also{
-                it.context = context
-                it.repository = PhotoRepositoryImpl(context)
-                it.listener = context
-            } as T
-        }
+    override fun updateGridSpanCount(count: Int) {
+        (recycleView.layoutManager as? GridLayoutManager)?.spanCount = count
     }
 }
 
+interface GridSpanUpdater{
+    fun updateGridSpanCount(count:Int)
+}
+
 class MainViewModel: ViewModel(),ItemViewModel.Listener {
-    var context: Context? = null
     var repository:PhotoRepository? = null
     var listener:ItemViewModel.Listener? = null
+    var orientationService:OrientationService? = null
+    var gridSpanUpdater:GridSpanUpdater? = null
 
     // ここはObservable<T>やLiveDataでないと、DataBindingを経由して変更通知が届かない
     val items: MutableLiveData<List<ItemViewModel>> = MutableLiveData()
     var onlyPositioned: Boolean = true
-    val spanCount:MutableLiveData<Int> = MutableLiveData()
 
     // TODO 双方向バインディング化
     fun onCheckedChanged(checked: Boolean) {
         onlyPositioned = checked
-        this.update()
+        this.updateItems()
     }
 
-    fun update() {
+    fun updateItems() {
         val list = repository?.find(onlyPositioned) ?: emptyList()
         items.value = list.map {
             ItemViewModel(it, this)
@@ -113,13 +107,13 @@ class MainViewModel: ViewModel(),ItemViewModel.Listener {
         listener?.onClickItem(photoData)
     }
 
-    fun updateGridSpanSize(){
-        val spanCount = when( context?.resources?.configuration?.orientation ){
-            Configuration.ORIENTATION_PORTRAIT -> 2
-            Configuration.ORIENTATION_LANDSCAPE -> 4
+    fun updateGridSpanCount(){
+        val spanCount = when(orientationService?.orientation()){
+            Orientation.Portrait -> 2
+            Orientation.Landscape -> 4
             else -> 1
         }
-        this.spanCount.value = spanCount
+        gridSpanUpdater?.updateGridSpanCount(spanCount)
     }
 }
 

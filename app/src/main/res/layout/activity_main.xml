@@ -39,7 +39,6 @@
                 android:id="@+id/recycleView"
                 android:layout_height="0dp"
         app:layoutManager="android.support.v7.widget.GridLayoutManager"
-                app:spanCount="2"
         android:adapter="@{adapter}"
                 app:viewModels="@{viewModel.items}"
         />
