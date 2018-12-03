@@ -8,8 +8,8 @@
         <import type="android.view.View"/>
         <!--variable name="date" type="String"/ -->
         <!-- variable name="visibleLocationIcon" type="Boolean"/ -->
-        <variable name="itemViewModel"
-                  type="jp.paming.positionedphoto.ItemViewModel"/>
+        <variable name="mainItemViewModel"
+                  type="jp.paming.positionedphoto.ui.MainItemViewModel"/>
     </data>
     <android.support.v7.widget.CardView
             xmlns:card_view="http://schemas.android.com/apk/res-auto"
@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             card_view:cardCornerRadius="4dp"
             app:cardUseCompatPadding="true"
-            android:onClick="@{() -> itemViewModel.onClick()}"
+            android:onClick="@{() -> mainItemViewModel.onClick()}"
     >
         <!-- TODO ↑onClick 書き直す -->
 
@@ -27,7 +27,7 @@
                                                      android:layout_height="wrap_content">
 
             <TextView
-                    android:text="@{itemViewModel.date}"
+                    android:text="@{mainItemViewModel.date}"
                     android:layout_height="wrap_content"
                     android:id="@+id/textView"
                     app:layout_constraintStart_toStartOf="parent"
@@ -46,13 +46,13 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:imageUri="@{itemViewModel.uri}"/>
+                    app:imageUri="@{mainItemViewModel.uri}"/>
             <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:srcCompat="@drawable/ic_location_on_black_24dp"
                     android:id="@+id/imageView2"
-                    android:visibility="@{itemViewModel.visibleLocationIcon ? View.VISIBLE:View.GONE}"
+                    android:visibility="@{mainItemViewModel.visibleLocationIcon ? View.VISIBLE:View.GONE}"
                     card_view:layout_constraintTop_toTopOf="parent"
                     android:layout_marginTop="8dp" card_view:layout_constraintStart_toStartOf="parent"
                     android:layout_marginStart="8dp" card_view:layout_constraintEnd_toStartOf="@+id/imageView"

@@ -1,4 +1,4 @@
-package jp.paming.positionedphoto
+package jp.paming.positionedphoto.ui
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -9,6 +9,8 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import kotlinx.android.synthetic.main.activity_detail.*
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.MarkerOptions
+import jp.paming.positionedphoto.R
+import jp.paming.positionedphoto.service.PhotoData
 
 
 class DetailActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -16,12 +18,12 @@ class DetailActivity : AppCompatActivity(), OnMapReadyCallback {
         const val INTENT_EXTRA_PHOTODATA = "IntentExtraPhotoData"
     }
 
-    private lateinit var photoData:PhotoData
+    private lateinit var photoData: PhotoData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
-        photoData = intent.getParcelableExtra(DetailActivity.INTENT_EXTRA_PHOTODATA)
+        photoData = intent.getParcelableExtra(INTENT_EXTRA_PHOTODATA)
         Glide.with(this).load( photoData.uri).into(imageView)
 
         val mapFragment = supportFragmentManager

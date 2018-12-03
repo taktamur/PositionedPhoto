@@ -1,4 +1,4 @@
-package jp.paming.positionedphoto
+package jp.paming.positionedphoto.service
 
 import android.annotation.SuppressLint
 import android.content.ContentUris
@@ -31,7 +31,7 @@ interface PhotoRepository{
 }
 
 // TODO 日付と緯度経度は、ファイルの内容から取得するように変更
-class PhotoRepositoryImpl(context: Context):PhotoRepository {
+class PhotoRepositoryImpl(context: Context): PhotoRepository {
     private val contentResolver = context.contentResolver
 
     @SuppressLint("Recycle")

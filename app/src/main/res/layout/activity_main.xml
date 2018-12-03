@@ -7,9 +7,9 @@
 
     <data>
         <variable name="adapter"
-                  type="jp.paming.positionedphoto.ItemAdapter"/>
+                  type="jp.paming.positionedphoto.ui.MainItemAdapter"/>
         <variable name="mainViewModel"
-                  type="jp.paming.positionedphoto.MainViewModel"/>
+                  type="jp.paming.positionedphoto.ui.MainViewModel"/>
     </data>
     <android.support.constraint.ConstraintLayout
             android:layout_width="match_parent"
