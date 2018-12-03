@@ -14,6 +14,7 @@ import jp.paming.positionedphoto.R
 import jp.paming.positionedphoto.service.PhotoData
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
+import android.content.res.Configuration
 
 
 class MainActivity : AppCompatActivity(),LifecycleOwner,ItemClickCallback {
@@ -23,10 +24,6 @@ class MainActivity : AppCompatActivity(),LifecycleOwner,ItemClickCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        fun ActivityMainBinding.getGridLayoutManager():GridLayoutManager? {
-            return (this.recycleView.layoutManager as? GridLayoutManager)
-        }
 
         binding = DataBindingUtil.setContentView(this,R.layout.activity_main)
         binding.setLifecycleOwner(this)
@@ -42,15 +39,14 @@ class MainActivity : AppCompatActivity(),LifecycleOwner,ItemClickCallback {
         binding.mainViewModel = mainViewModel
         binding.adapter = MainItemAdapter()
 
-        mainViewModel.updateGridSpanCount()
+        // 画面回転への対応
+        binding.mainViewModel?.spanCount?.value = calSpanCount()
+
         onCreatePhotoPermission {
             mainViewModel.updateItems()
         }
         // TODO RecyclerViewの縦インジケータ表示
     }
-
-
-
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -72,16 +68,23 @@ class MainActivity : AppCompatActivity(),LifecycleOwner,ItemClickCallback {
     }
 
     class Factory(
-        val mainActibity: MainActivity
+        private val mainActibity: MainActivity
         ) : ViewModelProvider.NewInstanceFactory() {
 
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             val mainViewModel = MainViewModel()
             val application = mainActibity.application as MyApp
             mainViewModel.photoRepository = application.photoRepository
-            mainViewModel.orientationService = application.orientationService
             mainViewModel.clickListener = mainActibity
+            @Suppress("UNCHECKED_CAST")
             return mainViewModel as T
+        }
+    }
+
+    private fun calSpanCount():Int {
+        return when (resources.configuration.orientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> 4
+            else -> 2
         }
     }
 }
