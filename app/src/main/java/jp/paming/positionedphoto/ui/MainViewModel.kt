@@ -2,16 +2,17 @@ package jp.paming.positionedphoto.ui
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
+import android.support.v7.widget.GridLayoutManager
 import jp.paming.positionedphoto.service.Orientation
 import jp.paming.positionedphoto.service.OrientationService
-import jp.paming.positionedphoto.service.PhotoData
 import jp.paming.positionedphoto.service.PhotoRepository
 
 class MainViewModel: ViewModel() {
     var photoRepository: PhotoRepository? = null
     var orientationService: OrientationService? = null
-    var onClickListener:((PhotoData)->Unit)? = null
-    var updateGridSpanListener:((Int)->Unit)? = null
+    var onClickListener:OnItemClickListner? = null
+    // TODO Service->LiveData->BindingAdapter->LayoutManager にしたらこれ不要になる？
+    var updateGridSpanListener:GridLayoutManager? = null
 
     // ここはObservable<T>やLiveDataでないと、DataBindingを経由して変更通知が届かない
     val items: MutableLiveData<List<MainItemViewModel>> =
@@ -37,6 +38,6 @@ class MainViewModel: ViewModel() {
             Orientation.Landscape -> 4
             else -> 1
         }
-        updateGridSpanListener?.invoke(spanCount)
+        updateGridSpanListener?.spanCount = spanCount
     }
 }

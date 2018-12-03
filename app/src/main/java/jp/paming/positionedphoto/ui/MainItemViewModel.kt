@@ -3,8 +3,13 @@ package jp.paming.positionedphoto.ui
 import android.net.Uri
 import jp.paming.positionedphoto.service.PhotoData
 
+
+interface OnItemClickListner {
+    fun onItemClick(photoData:PhotoData)
+}
+
 class MainItemViewModel(private val photoData: PhotoData,
-                        private val listener:((PhotoData)->Unit)?){
+                        private val listener:OnItemClickListner?){
 
     fun getDate():String = photoData.getDateString()
 
@@ -12,5 +17,7 @@ class MainItemViewModel(private val photoData: PhotoData,
 
     fun getVisibleLocationIcon():Boolean = (photoData.loc != null)
 
-    fun onClick() = listener?.invoke(photoData)
+    fun onClick() {
+        listener?.onItemClick(photoData)
+    }
 }
