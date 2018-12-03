@@ -10,13 +10,12 @@ import jp.paming.positionedphoto.service.PhotoRepository
 class MainViewModel: ViewModel() {
     var photoRepository: PhotoRepository? = null
     var orientationService: OrientationService? = null
-    var onClickListener:OnItemClickListner? = null
-    // TODO Service->LiveData->BindingAdapter->LayoutManager にしたらこれ不要になる？
-    var updateGridSpanListener:GridLayoutManager? = null
+    var clickListener:ItemClickCallback? = null
 
     // ここはObservable<T>やLiveDataでないと、DataBindingを経由して変更通知が届かない
-    val items: MutableLiveData<List<MainItemViewModel>> =
-        MutableLiveData()
+    val items: MutableLiveData<List<MainItemViewModel>> = MutableLiveData()
+    val spanCount: MutableLiveData<Int> = MutableLiveData()
+
     var onlyPositioned: Boolean = true
 
     // TODO 双方向バインディング化
@@ -28,7 +27,7 @@ class MainViewModel: ViewModel() {
     fun updateItems() {
         val list = photoRepository?.find(onlyPositioned) ?: emptyList()
         items.value = list.map {
-            MainItemViewModel(it, onClickListener)
+            MainItemViewModel(it, clickListener)
         }
     }
 
@@ -38,6 +37,6 @@ class MainViewModel: ViewModel() {
             Orientation.Landscape -> 4
             else -> 1
         }
-        updateGridSpanListener?.spanCount = spanCount
+        this.spanCount?.value = spanCount
     }
 }

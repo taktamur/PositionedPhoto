@@ -16,10 +16,7 @@ import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 
 
-class MainActivity : AppCompatActivity(),LifecycleOwner,OnItemClickListner {
-
-    // TODO ここにViewModelは持たないようにする
- //   private lateinit var mainViewModel: MainViewModel
+class MainActivity : AppCompatActivity(),LifecycleOwner,ItemClickCallback {
 
     private lateinit var binding:ActivityMainBinding
 
@@ -36,17 +33,11 @@ class MainActivity : AppCompatActivity(),LifecycleOwner,OnItemClickListner {
 
         // ViewModelProvidersでViewModelを作る時のコンストラクタで値を渡す為に、
         // Factoryクラスを作ってそれで生成している
-        // TODO ここFactoryクラス作って、MyAppのServiceの参照を使ってインスタンスを作る
         // Factoryクラスの書き方：
         //  https://starzero.hatenablog.com/entry/2017/05/19/005437
         val mainViewModel = ViewModelProviders.of(this,Factory(
-            this,
-            binding.getGridLayoutManager()
-        ))
-            .get(MainViewModel::class.java)
-        // ここManagerを再設定しているのは、回転時の列数が1になったから
-        // TODO BindingAdapterでの設定になれば、この上書きも不要になると思う
-        mainViewModel.updateGridSpanListener = binding.getGridLayoutManager()
+            this
+        )).get(MainViewModel::class.java)
 
         binding.mainViewModel = mainViewModel
         binding.adapter = MainItemAdapter()
@@ -81,8 +72,7 @@ class MainActivity : AppCompatActivity(),LifecycleOwner,OnItemClickListner {
     }
 
     class Factory(
-        val mainActibity: MainActivity,
-        val gridLayoutManager: GridLayoutManager?
+        val mainActibity: MainActivity
         ) : ViewModelProvider.NewInstanceFactory() {
 
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -90,8 +80,7 @@ class MainActivity : AppCompatActivity(),LifecycleOwner,OnItemClickListner {
             val application = mainActibity.application as MyApp
             mainViewModel.photoRepository = application.photoRepository
             mainViewModel.orientationService = application.orientationService
-            mainViewModel.onClickListener = mainActibity
-            mainViewModel.updateGridSpanListener = gridLayoutManager
+            mainViewModel.clickListener = mainActibity
             return mainViewModel as T
         }
     }
@@ -104,3 +93,8 @@ fun RecyclerView.setViewModels(newMainItem: List<MainItemViewModel>) {
     adapter.update(newMainItem.toList())
 }
 
+@BindingAdapter("app:updateSpanCount")
+fun RecyclerView.setUpdateSpanCount(count:Int) {
+    val manager = this.layoutManager as GridLayoutManager
+    manager.spanCount = count
+}

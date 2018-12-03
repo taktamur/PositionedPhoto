@@ -4,12 +4,8 @@ import android.net.Uri
 import jp.paming.positionedphoto.service.PhotoData
 
 
-interface OnItemClickListner {
-    fun onItemClick(photoData:PhotoData)
-}
-
 class MainItemViewModel(private val photoData: PhotoData,
-                        private val listener:OnItemClickListner?){
+                        private val listener:ItemClickCallback?){
 
     fun getDate():String = photoData.getDateString()
 
