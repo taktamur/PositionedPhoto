@@ -35,11 +35,12 @@ class MainActivity : AppCompatActivity(),LifecycleOwner {
 
         // ViewModelProvidersでViewModelを作る時のコンストラクタで値を渡す為に、
         // Factoryクラスを作ってそれで生成している
+        // TODO ここFactoryクラス作って、MyAppのServiceの参照を使ってインスタンスを作る
         mainViewModel = ViewModelProviders.of(this)
             .get(MainViewModel::class.java)
             .also{
-                it.photoRepository = PhotoRepositoryImpl(this)
-                it.orientationService = OrientationServiceImpl(this)
+                it.photoRepository = (application as MyApp).photoRepository
+                it.orientationService = (application as MyApp).orientationService
                 it.onClickListener = this::onClickItem
                 binding.getGridLayoutManager()?.let{ manager: GridLayoutManager ->
                     it.updateGridSpanListener = manager::setSpanCount
