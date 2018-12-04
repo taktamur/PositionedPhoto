@@ -6,6 +6,12 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import jp.paming.positionedphoto.databinding.PhotoCardBinding
 
+
+// RecyclerView.ViewHolderを継承した自作ViewHolder
+// 親クラスの初期化にはBinding.rootで親Viewを渡し、
+// 子クラスはbindingを保持する
+class PhotoCardDataViewHolder(val binding: PhotoCardBinding) : RecyclerView.ViewHolder(binding.root)
+
 class MainItemAdapter : RecyclerView.Adapter<PhotoCardDataViewHolder>() {
 
     private var mainItem:List<MainItemViewModel> = listOf()

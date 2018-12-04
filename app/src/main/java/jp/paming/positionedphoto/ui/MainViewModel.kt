@@ -15,6 +15,7 @@ class MainViewModel: ViewModel() {
     var onlyPositioned: Boolean = true
 
     init{
+        // TODO LiveDataのvalueを使っているけど、putValueとかsetValueとかとの違いは何か？
         spanCount.value = 1 // 初期値
     }
     // TODO 双方向バインディング化
